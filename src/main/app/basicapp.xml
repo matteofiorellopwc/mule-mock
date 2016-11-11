@@ -1,0 +1,34 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<mule xmlns:mulexml="http://www.mulesoft.org/schema/mule/xml"
+	xmlns:cxf="http://www.mulesoft.org/schema/mule/cxf"
+	xmlns:s3="http://www.mulesoft.org/schema/mule/s3" xmlns:sfdc="http://www.mulesoft.org/schema/mule/sfdc" xmlns:http="http://www.mulesoft.org/schema/mule/http" xmlns="http://www.mulesoft.org/schema/mule/core" xmlns:doc="http://www.mulesoft.org/schema/mule/documentation"
+	xmlns:spring="http://www.springframework.org/schema/beans" 
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:schemaLocation="http://www.mulesoft.org/schema/mule/xml http://www.mulesoft.org/schema/mule/xml/current/mule-xml.xsd
+http://www.mulesoft.org/schema/mule/cxf http://www.mulesoft.org/schema/mule/cxf/current/mule-cxf.xsd
+http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans-current.xsd
+http://www.mulesoft.org/schema/mule/core http://www.mulesoft.org/schema/mule/core/current/mule.xsd
+http://www.mulesoft.org/schema/mule/http http://www.mulesoft.org/schema/mule/http/current/mule-http.xsd
+http://www.mulesoft.org/schema/mule/s3 http://www.mulesoft.org/schema/mule/s3/current/mule-s3.xsd
+http://www.mulesoft.org/schema/mule/sfdc http://www.mulesoft.org/schema/mule/sfdc/current/mule-sfdc.xsd">
+    <http:listener-config name="HTTP_Listener_Configuration" host="0.0.0.0" port="${http.port}" doc:name="HTTP Listener Configuration"/>
+    
+    <cxf:configuration name="CXF_Configuration" enableMuleSoapHeaders="true" initializeStaticBusInstance="true" doc:name="CXF Configuration"/>
+    <flow name="basicappFlow">
+        <http:listener config-ref="HTTP_Listener_Configuration" path="/" doc:name="HTTP"/>
+        <set-payload value="test" doc:name="Set Payload"/>
+    </flow>
+    
+    <flow name="mulesoapmockFlow">
+        <http:listener config-ref="HTTP_Listener_Configuration" path="/account" doc:name="HTTP"/>
+        <mulexml:dom-to-xml-transformer doc:name="DOM to XML"/>
+        
+<!--         <http:inbound-endpoint exchange-pattern="request-response" host="localhost" port="8081" path="OrderSvcs" doc:name="HTTP"/> -->
+  		<cxf:jaxws-service port="80" wsdlLocation="wfoutbound.wsdl" doc:name="SOAP" serviceClass="com.pwc.NotificationPort"/>
+  		<component class="com.pwc.NotificationPortImpl" doc:name="Java"/>
+  		
+<!-- 		<cxf:proxy-service wsdlLocation="wfoutbound.wsdl" configuration-ref="CXF_Configuration" payload="body" mtomEnabled="true" soapVersion="1.2" doc:name="CXF"/>        <mulexml:dom-to-xml-transformer doc:name="DOM to XML"/> -->
+        <logger message="#[payload]" level="ERROR" doc:name="Logger2"/>
+    </flow>
+</mule>
